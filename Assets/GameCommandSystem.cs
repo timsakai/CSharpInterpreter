@@ -155,6 +155,45 @@ public class GameCommandSystem : MonoBehaviour
         return output;
     }
 
+    string Operation(Dictionary<string, string> args)
+    {
+
+        string output = MakeVariableID();
+        Variable output_variable = new Variable();
+
+        float A = ReadAs<float>(args["A"]);
+        float B = ReadAs<float>(args["B"]);
+        string op = ReadAs<string>(args["operator"]);
+
+        float opereted = 0;
+        bool is_vaild_oparator = true;
+
+        switch (op)
+        {
+            case "add":
+                opereted = A + B;
+                break;
+            case "sub":
+                opereted = A - B;
+                break;
+            case "mul":
+                opereted = A * B;
+                break;
+            case "div":
+                opereted = A / B;
+                break;
+
+            default:
+                is_vaild_oparator = false;
+                break;
+        }
+
+        output_variable.value = opereted;
+        if(!is_vaild_oparator) output_variable.value = "Error,operator is not valid";
+        dynamicVariable.AddVariable(output, output_variable);
+
+        return opereted.ToString();
+    }
     
     //コマンド：
     //デバッグログする
