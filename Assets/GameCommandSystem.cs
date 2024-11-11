@@ -30,7 +30,7 @@ public class DynamicVariable
         variables.Add(name, variable);
     }
 }
-public class GameCommandSystem : MonoBehaviour
+partial class GameCommandSystem : MonoBehaviour
 {
     //TODO:DynamicVariableの寿命を設定　読みだし時に消すようにする。
     DynamicVariable dynamicVariable = new DynamicVariable(); // 動的変数　返り値を受け取ったりするために使う
@@ -43,6 +43,8 @@ public class GameCommandSystem : MonoBehaviour
     string command;
     string command2;
     string command3;
+
+    List<GameCommand> commands = new List<GameCommand>();
 
     string[] words; //動的変数用ランダムワード
     private void Awake()
@@ -84,6 +86,13 @@ public class GameCommandSystem : MonoBehaviour
         
     }
 
+    public void ExecuteCommands(List<GameCommand> commands)
+    {
+        foreach (GameCommand command in commands)
+        {
+            ExecuteCommand(command);
+        }
+    }
     //コマンド登録関数
     public void SubscribeCommand(string command,ExecutableFunction function)
     {
@@ -155,6 +164,12 @@ public class GameCommandSystem : MonoBehaviour
         return output;
     }
 
+
+    //コマンド：
+    //二つの値を四則演算
+    //入力：A=左　B=右　operator=演算子
+    //"add":加算,"sub":減算,"mul":乗算,"div":除算
+    //出力：計算結果
     string Operation(Dictionary<string, string> args)
     {
 
@@ -194,7 +209,52 @@ public class GameCommandSystem : MonoBehaviour
 
         return opereted.ToString();
     }
-    
+
+    //コマンド：
+    //二つの値を比較演算
+    //入力：A=左　B=右　operator=演算子
+    //"Equal":等値,"Less":未満,"Greater":より大きい,"LessOrEqual":以下,"GreaterOrEqual":以上
+    //出力：真偽地
+    string Compare
+        (Dictionary<string, string> args)
+    {
+
+        string output = MakeVariableID();
+        Variable output_variable = new Variable();
+
+        float A = ReadAs<float>(args["A"]);
+        float B = ReadAs<float>(args["B"]);
+        string op = ReadAs<string>(args["operator"]);
+
+        bool compared = false;
+        bool is_vaild_oparator = true;
+
+        switch (op)
+        {
+            case "Less":
+                compared = A < B;
+                break;
+            case "Greater":
+                compared = A > B;
+                break;
+            case "LessOrEqual":
+                compared = A <= B;
+                break;
+            case "GreaterOrEqual":
+                compared = A >= B;
+                break;
+
+            default:
+                is_vaild_oparator = false;
+                break;
+        }
+
+        output_variable.value = compared;
+        if (!is_vaild_oparator) output_variable.value = "Error,operator is not valid";
+        dynamicVariable.AddVariable(output, output_variable);
+
+        return compared.ToString();
+    }
     //コマンド：
     //デバッグログする
     //入力：value=値
@@ -226,11 +286,32 @@ public class GameCommandSystem : MonoBehaviour
         }
         else
         {
-
+            object object_value = (object)value;
+            object output = null;
+            if(typeof(T) == typeof(string))
+            {
+                output = object_value; // stringの時は変換無し
+            }
+            if(typeof(T) == typeof(float))
+            {
+                // floatの変換処理
+                // stringとして変換後にパース
+                string str = (string)object_value;
+                float val = float.Parse(str);
+                output = val;
+            }
+            if (typeof(T) == typeof(bool))
+            {
+                // boolの変換処理
+                // stringとして変換後にパース
+                string str = (string)object_value;
+                bool val = bool.Parse(str);
+                output = val;
+            }
             //objectにしてからTにする、やべぇ
             //変換処理かますわけじゃないから、数値変換なんかもできるわけがない！
             //valueを数値変換→objectにしてからTにするってコト!?
-            return (T)(object)value;
+            return (T)output;
         }
         return default(T);
     }
