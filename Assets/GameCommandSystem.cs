@@ -153,12 +153,10 @@ partial class GameCommandSystem : MonoBehaviour
         string output = MakeVariableID();
         Variable output_variable = new Variable();
 
-        GameCommand game_command = JsonGameCommandParse.JsonToGameCommand(args["command"]);
-        string retID = ExecuteCommand(game_command);
-        Variable retVal = dynamicVariable.GetVariable(retID);
-        if (userVariable.ContainsKey(args["name"])) { userVariable[args["name"]] = retVal; }
+        object retVal = ReadAs<object>(args["command"]);
+        if (userVariable.ContainsKey(args["name"])) { userVariable[args["name"]].value = retVal; }
 
-        output_variable.value = retVal.value;
+        output_variable.value = retVal;
         dynamicVariable.AddVariable(output, output_variable);
 
         return output;
@@ -207,7 +205,7 @@ partial class GameCommandSystem : MonoBehaviour
         if(!is_vaild_oparator) output_variable.value = "Error,operator is not valid";
         dynamicVariable.AddVariable(output, output_variable);
 
-        return opereted.ToString();
+        return output;
     }
 
     //コマンド：
@@ -253,7 +251,7 @@ partial class GameCommandSystem : MonoBehaviour
         if (!is_vaild_oparator) output_variable.value = "Error,operator is not valid";
         dynamicVariable.AddVariable(output, output_variable);
 
-        return compared.ToString();
+        return output;
     }
     //コマンド：
     //デバッグログする
@@ -280,9 +278,18 @@ partial class GameCommandSystem : MonoBehaviour
     {
         if(value.StartsWith("var_"))
         {
+            //変数読込
             Debug.Log("is variable");
             Debug.Log("is variable2");
             return (T)userVariable[value.Substring(4)].value;
+        }
+        else if (value.StartsWith("cmd_"))
+        {
+            //コマンド呼び出し
+            string command_string = value.Substring(4);
+            GameCommand gameCommand = JsonGameCommandParse.JsonToGameCommand(command_string);
+            string d_var = ExecuteCommand(gameCommand);
+            return (T)dynamicVariable.GetVariable(d_var).value;
         }
         else
         {

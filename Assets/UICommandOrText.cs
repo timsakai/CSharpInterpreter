@@ -94,7 +94,7 @@ public class UICommandOrText : MonoBehaviour
     }
 
     //ƒRƒ}ƒ“ƒh“ü—Í•¶Žš—ñ‰»
-    public string GatherString(bool is_escape)
+    public string GatherString(bool is_escape,bool is_cmd_argument)
     {
         string output = "";
         if(currentMode == CommandOrText.Command)
@@ -113,7 +113,9 @@ public class UICommandOrText : MonoBehaviour
                 loop++;
             }
             argstream += "}";
-            output = "{" + commandkey + ":" +  doublequote + commandname + doublequote + argstream + "}";
+            string cmd_sign = "";
+            if (is_cmd_argument) cmd_sign = "cmd_";
+            output = cmd_sign + "{" + commandkey + ":" +  doublequote + commandname + doublequote + argstream + "}";
         }
         else if (currentMode == CommandOrText.Text)
         {

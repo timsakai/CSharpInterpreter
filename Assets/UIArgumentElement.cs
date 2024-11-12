@@ -24,7 +24,7 @@ public class UIArgumentElement : MonoBehaviour,IElementDefault
         
         string name = doublequote + argumentName.text + doublequote;
         
-        string value = doublequote + input.GatherString(true) + doublequote;
+        string value = doublequote + input.GatherString(true,true) + doublequote;
         
         string output = name + ":" + value;
 
@@ -37,6 +37,7 @@ public class UIArgumentElement : MonoBehaviour,IElementDefault
         if (argMinus == null) Debug.LogError("Please Attach argMinus Button");
         if (input == null) Debug.LogError("Please Attach input UICommandOrText");
         argMinus.onClick.AddListener(Remove);   //è¡ãéèàóù
+        input.attachedElement = this;
     }
 
     void Remove()

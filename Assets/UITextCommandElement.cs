@@ -32,6 +32,7 @@ public class UITextCommandElement : MonoBehaviour , IElementDefault
         minus.onClick.AddListener(RemoveSelf);                      //消去機能
         moveUp.onClick.AddListener(MoveUp);                         //上移動機能
         moveDown.onClick.AddListener(MoveDown);                     //下移動機能
+        input.attachedElement = this;
     }
 
     //外から無理やりテキスト設定する（テスト用）
@@ -69,7 +70,7 @@ public class UITextCommandElement : MonoBehaviour , IElementDefault
     //Execute以前のいいタイミングで実行させたい
     void GatherString()
     {
-        command = input.GatherString(false);
+        command = input.GatherString(false,false);
     }
     // Update is called once per frame
     void Update()
