@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.UI;
@@ -12,6 +13,7 @@ public class UITextCommandList : MonoBehaviour
     [SerializeField] GameObject textCommandElementPrefab;       //コマンド要素オブジェクトのプレファブ
     [SerializeField] VerticalLayoutGroup verticalLayoutGroup;   //コマンド要素を配置するレイアウトグループ
     [SerializeField] Button plus;                               //コマンド追加ボタン
+    [SerializeField] Transform plusDefault;                               //コマンド追加ボタン
     [SerializeField] Button execute;                            //関数実行ボタン
     [SerializeField] List<UITextCommandElement> textCommandElements = new List<UITextCommandElement>(); //コマンド要素リスト
     [SerializeField] List<GameCommand> commands = new List<GameCommand>();  //Jsonからデシリアライズ済みコマンドリスト
@@ -29,6 +31,7 @@ public class UITextCommandList : MonoBehaviour
         if (gameCommandSystem == null) Debug.LogError("Please Attach GameCommandSystem");
 
         if (plus == null) Debug.LogError("Please Attach plus Button");
+        if (plusDefault == null) Debug.LogError("Please Attach plusDefault Transform");
         plus.onClick.AddListener(AddElement);
         execute.onClick.AddListener(Execute);
     }
@@ -48,8 +51,12 @@ public class UITextCommandList : MonoBehaviour
 
     public void RemoveElement(UITextCommandElement element)
     {
+        plus.transform.SetParent(plusDefault, false);
+
         textCommandElements.Remove(element);
         Destroy(element.gameObject);
+        element.gameObject.tag = "Destroyed";
+        
         UpdateElements();
     }
 
@@ -72,7 +79,16 @@ public class UITextCommandList : MonoBehaviour
             textCommandElements.Add( verticalLayoutGroup.transform.GetChild(i).GetComponent<UITextCommandElement>());
             if(i == verticalLayoutGroup.transform.childCount - 1)
             {
-                plus.transform.SetParent(verticalLayoutGroup.transform.GetChild(i), false);
+                if (verticalLayoutGroup.transform.GetChild(i).CompareTag("Destroyed"))//先頭が削除済みならば
+                {
+                    if(i > 0) plus.transform.SetParent(verticalLayoutGroup.transform.GetChild(i-1), false);//残り数が0以外の時、一個前にプラスを配置
+
+                }
+                else
+                {
+                    plus.transform.SetParent(verticalLayoutGroup.transform.GetChild(i), false);//先頭にプラスを配置
+
+                }
             }
         }
         foreach (var element in textCommandElements)

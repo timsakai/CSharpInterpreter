@@ -19,6 +19,10 @@ public class UITextCommandElement : MonoBehaviour , IElementDefault
     [SerializeField] UICommandOrText input;//入力オブジェクト
 
     // Start is called before the first frame update
+    private void Awake()
+    {
+        input.attachedElement = this;
+    }
     void Start()
     {
         if (inputField == null) Debug.LogError("Please Attach inputField");
@@ -32,7 +36,7 @@ public class UITextCommandElement : MonoBehaviour , IElementDefault
         minus.onClick.AddListener(RemoveSelf);                      //消去機能
         moveUp.onClick.AddListener(MoveUp);                         //上移動機能
         moveDown.onClick.AddListener(MoveDown);                     //下移動機能
-        input.attachedElement = this;
+        
     }
 
     //外から無理やりテキスト設定する（テスト用）

@@ -30,6 +30,11 @@ public class UIArgumentElement : MonoBehaviour,IElementDefault
 
         return output;
     }
+    private void Awake()
+    {
+        input.attachedElement = this;
+
+    }
     // Start is called before the first frame update
     void Start()
     {
@@ -37,7 +42,6 @@ public class UIArgumentElement : MonoBehaviour,IElementDefault
         if (argMinus == null) Debug.LogError("Please Attach argMinus Button");
         if (input == null) Debug.LogError("Please Attach input UICommandOrText");
         argMinus.onClick.AddListener(Remove);   //è¡ãéèàóù
-        input.attachedElement = this;
     }
 
     void Remove()

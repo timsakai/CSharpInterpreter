@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,6 +15,7 @@ public class UICommandOrText : MonoBehaviour
     [SerializeField] GameObject commandPanel;           //モードによって有効・無効化されるオブジェクト、コマンド入力側
     [SerializeField] TMP_InputField commandName;        //コマンド入力モードのコマンド名
     [SerializeField] Button argPlus;                    //コマンド入力モードの引数追加
+    [SerializeField] Transform argPlusDefault;                    //コマンド入力モードの引数追加
     [SerializeField] HorizontalLayoutGroup argumentLayoutGroup;                                 //引数オブジェクトを配置するレイアウトグループ
     [SerializeField] List<UIArgumentElement> argumentElements = new List<UIArgumentElement>();  //引数オブジェクトのリスト
     public IElementDefault attachedElement;             //入力としてアタッチされている親
@@ -24,6 +26,7 @@ public class UICommandOrText : MonoBehaviour
         if (argumentElementPrefab == null) Debug.LogError("Please Attach argumentElementPrefab");
         if (cmdTxtSwitch == null) Debug.LogError("Please Attach cmdTxtSwith Button");
         if (argPlus == null) Debug.LogError("Please Attach argPlus Button");
+        if (argPlusDefault == null) Debug.LogError("Please Attach argPlusDefaultParent");
         if (textPanel == null) Debug.LogError("Please Attach textPanel");
         if (commandPanel == null) Debug.LogError("Please Attach commandPanel");
         cmdTxtSwitch.onClick.AddListener(Switch);   //モード切替機能
@@ -70,6 +73,8 @@ public class UICommandOrText : MonoBehaviour
     //引数削除機能
     public void RemoveArgument(UIArgumentElement element)
     {
+        argPlus.transform.SetParent(argPlusDefault, false);
+        element.gameObject.tag = "Destroyed";
         Destroy(element.gameObject);
         UpdateArgument();
     }
@@ -84,7 +89,15 @@ public class UICommandOrText : MonoBehaviour
             argumentElements.Add(argumentLayoutGroup.transform.GetChild(i).GetComponent<UIArgumentElement>());
             if (i == argumentLayoutGroup.transform.childCount - 1)
             {
-                argPlus.transform.SetParent(argumentLayoutGroup.transform.GetChild(i), false);
+                if(argumentLayoutGroup.transform.GetChild(i).CompareTag("Destroyed"))//先頭が削除済みならば
+                {
+                    if(i > 0) argPlus.transform.SetParent(argumentLayoutGroup.transform.GetChild(i-1), false);//残り数が0以外の時、一個前にプラスを配置
+                }
+                else
+                {
+                    argPlus.transform.SetParent(argumentLayoutGroup.transform.GetChild(i), false);//先頭にプラスを配置
+
+                }
             }
         }
         foreach (var element in argumentElements)

@@ -631,6 +631,7 @@ MonoBehaviour:
   commandPanel: {fileID: 3248643047467951611}
   commandName: {fileID: 1423986487203670212}
   argPlus: {fileID: 5471876413489199720}
+  argPlusDefault: {fileID: 867414620617700825}
   argumentLayoutGroup: {fileID: 6065636553021455039}
   argumentElements: []
   currentMode: 0
@@ -1366,7 +1367,7 @@ GameObject:
   m_Component:
   - component: {fileID: 867414620617700825}
   m_Layer: 5
-  m_Name: PlusDefault
+  m_Name: ZeroElementOnNoElement
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
