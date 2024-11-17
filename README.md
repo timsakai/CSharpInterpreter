@@ -170,3 +170,35 @@ CatchFromReturnでユーザ変数Xに代入：インスタンスAを引数にA�
 - プロジェクトの保存
 - プロジェクトの読込
 
+```mermaid
+flowchart LR
+subgraph commandSystem
+  subgraph scene
+    subgraph input
+     CED(CommandEditor)
+     EX(ExecuteButton)
+     EX --> |④ReadRequest|CED
+     CED --> |⑤JsonCommand|EX
+    end
+    subgraph CommandComponent
+      EXC(ExecuteCommandFunction)
+      CMF(CommandFunctions)
+      CME(CommandEvents)
+      EXC --> |⑨Execute|CME
+      CMF --> |③Assign|CME
+    end
+    EX --> |⑥ Execute|EXC
+  end
+  subgraph staticMethots
+    GM(GeneratedMetots)
+    JP(JsonPerser)
+  end
+  EXC -->|⑦PerseRequest|JP
+  JP -->|⑧PersedCommand|EXC
+  CMF -->|⑩Execute|GM
+end
+subgraph commandGenerator
+  CTC(CSharpToCommand)
+end
+CTC --> |① Generate in Development| GM
+```
