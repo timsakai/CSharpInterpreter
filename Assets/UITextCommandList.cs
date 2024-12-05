@@ -52,11 +52,9 @@ public class UITextCommandList : MonoBehaviour
     public void RemoveElement(UITextCommandElement element)
     {
         plus.transform.SetParent(plusDefault, false);
-
-        textCommandElements.Remove(element);
-        Destroy(element.gameObject);
-        element.gameObject.tag = "Destroyed";
         
+        element.gameObject.tag = "Destroyed";//デストロイは更新処理で行うためここではタグ付けのみ
+
         UpdateElements();
     }
 
@@ -74,9 +72,10 @@ public class UITextCommandList : MonoBehaviour
     void UpdateElements()
     {
         textCommandElements.Clear();
-        for (int i = 0; i < verticalLayoutGroup.transform.childCount; i++)
+        int count = verticalLayoutGroup.transform.childCount;
+        for (int i = 0; i < count; i++)
         {
-            if (verticalLayoutGroup.transform.GetChild(i).CompareTag("Destroyed"))//削除済みでなければ
+            if (!verticalLayoutGroup.transform.GetChild(i).CompareTag("Destroyed"))//削除済みでなければ
             {
                 textCommandElements.Add(verticalLayoutGroup.transform.GetChild(i).GetComponent<UITextCommandElement>());
             }
@@ -84,7 +83,7 @@ public class UITextCommandList : MonoBehaviour
             {
                 if (verticalLayoutGroup.transform.GetChild(i).CompareTag("Destroyed"))//先頭が削除済みならば
                 {
-                    if(i > 0) plus.transform.SetParent(verticalLayoutGroup.transform.GetChild(i-1), false);//残り数が0以外の時、一個前にプラスボタンを配置
+                    if (i > 0) plus.transform.SetParent(verticalLayoutGroup.transform.GetChild(i - 1), false);//残り数が0以外の時、一個前にプラスボタンを配置
 
                 }
                 else
@@ -98,17 +97,19 @@ public class UITextCommandList : MonoBehaviour
         {
             element.commandList = this;
         }
-    }
 
+        //デストロイ本体
+        verticalLayoutGroup.gameObject.DestroyChildrenWithTag("Destroyed");
+    }
     void Execute()
     {
         commands = new List<GameCommand>();
         foreach (UITextCommandElement element in textCommandElements) 
         {
-            Debug.Log(element.GetText());
-            commands.Add(element.preDeserialized);
+            Debug.Log(element.GatherString());
+            commands.Add(JsonGameCommandParse.JsonToGameCommand(element.GatherString()));//シリアライズここ
         }
-        //gameCommandSystem.ExecuteCommands(commands);
+        gameCommandSystem.ExecuteCommands(commands);
     }
     // Update is called once per frame
     void Update()

@@ -64,6 +64,8 @@ partial class GameCommandSystem : MonoBehaviour
         SubscribeCommand("debuglog", Debuglog);
         SubscribeCommand("makeVariable", MakeVariable);
         SubscribeCommand("catchCommandReturn", CatchCommandReturn);
+        SubscribeCommand("Operation", Operation);
+        SubscribeCommand("Compare", Compare);
     }
     // Start is called before the first frame update
     void Start()
@@ -205,6 +207,8 @@ partial class GameCommandSystem : MonoBehaviour
         if(!is_vaild_oparator) output_variable.value = "Error,operator is not valid";
         dynamicVariable.AddVariable(output, output_variable);
 
+        Debug.Log(opereted);
+
         return output;
     }
 
@@ -251,6 +255,8 @@ partial class GameCommandSystem : MonoBehaviour
         if (!is_vaild_oparator) output_variable.value = "Error,operator is not valid";
         dynamicVariable.AddVariable(output, output_variable);
 
+        Debug.Log(output);
+
         return output;
     }
     //コマンド：
@@ -279,8 +285,6 @@ partial class GameCommandSystem : MonoBehaviour
         if(value.StartsWith("var_"))
         {
             //変数読込
-            Debug.Log("is variable");
-            Debug.Log("is variable2");
             return (T)userVariable[value.Substring(4)].value;
         }
         else if (value.StartsWith("cmd_"))
@@ -289,7 +293,7 @@ partial class GameCommandSystem : MonoBehaviour
             string command_string = value.Substring(4);
             GameCommand gameCommand = JsonGameCommandParse.JsonToGameCommand(command_string);
             string d_var = ExecuteCommand(gameCommand);
-            return (T)dynamicVariable.GetVariable(d_var).value;
+            return (T)(dynamicVariable.GetVariable(d_var).value);
         }
         else
         {

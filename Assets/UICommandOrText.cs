@@ -75,7 +75,6 @@ public class UICommandOrText : MonoBehaviour
     {
         argPlus.transform.SetParent(argPlusDefault, false);
         element.gameObject.tag = "Destroyed";
-        Destroy(element.gameObject);
         UpdateArgument();
     }
 
@@ -86,7 +85,10 @@ public class UICommandOrText : MonoBehaviour
         argumentElements.Clear();
         for (int i = 0; i < argumentLayoutGroup.transform.childCount; i++)
         {
-            argumentElements.Add(argumentLayoutGroup.transform.GetChild(i).GetComponent<UIArgumentElement>());
+            if (!argumentLayoutGroup.transform.GetChild(i).CompareTag("Destroyed"))//削除済みでなければ
+            {
+                argumentElements.Add(argumentLayoutGroup.transform.GetChild(i).GetComponent<UIArgumentElement>());
+            }
             if (i == argumentLayoutGroup.transform.childCount - 1)
             {
                 if(argumentLayoutGroup.transform.GetChild(i).CompareTag("Destroyed"))//先頭が削除済みならば
@@ -104,6 +106,9 @@ public class UICommandOrText : MonoBehaviour
         {
             element.parent = this;
         }
+
+        //デストロイ本体
+        argumentLayoutGroup.gameObject.DestroyChildrenWithTag("Destroyed");
     }
 
     //コマンド入力文字列化
@@ -128,7 +133,7 @@ public class UICommandOrText : MonoBehaviour
             argstream += "}";
             string cmd_sign = "";
             if (is_cmd_argument) cmd_sign = "cmd_";
-            output = cmd_sign + "{" + commandkey + ":" +  doublequote + commandname + doublequote + argstream + "}";
+            output = cmd_sign + "{" + commandkey + ":" +  doublequote + commandname + doublequote + "," + argstream + "}";
         }
         else if (currentMode == CommandOrText.Text)
         {

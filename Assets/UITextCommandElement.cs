@@ -72,9 +72,10 @@ public class UITextCommandElement : MonoBehaviour , IElementDefault
     }
     //入力からストリング(Jsonコマンド)を読み出し
     //Execute以前のいいタイミングで実行させたい
-    void GatherString()
+    public string GatherString()
     {
         command = input.GatherString(false,false);
+        return command;
     }
     // Update is called once per frame
     void Update()
