@@ -76,17 +76,20 @@ public class UITextCommandList : MonoBehaviour
         textCommandElements.Clear();
         for (int i = 0; i < verticalLayoutGroup.transform.childCount; i++)
         {
-            textCommandElements.Add( verticalLayoutGroup.transform.GetChild(i).GetComponent<UITextCommandElement>());
-            if(i == verticalLayoutGroup.transform.childCount - 1)
+            if (verticalLayoutGroup.transform.GetChild(i).CompareTag("Destroyed"))//削除済みでなければ
+            {
+                textCommandElements.Add(verticalLayoutGroup.transform.GetChild(i).GetComponent<UITextCommandElement>());
+            }
+            if (i == verticalLayoutGroup.transform.childCount - 1)
             {
                 if (verticalLayoutGroup.transform.GetChild(i).CompareTag("Destroyed"))//先頭が削除済みならば
                 {
-                    if(i > 0) plus.transform.SetParent(verticalLayoutGroup.transform.GetChild(i-1), false);//残り数が0以外の時、一個前にプラスを配置
+                    if(i > 0) plus.transform.SetParent(verticalLayoutGroup.transform.GetChild(i-1), false);//残り数が0以外の時、一個前にプラスボタンを配置
 
                 }
                 else
                 {
-                    plus.transform.SetParent(verticalLayoutGroup.transform.GetChild(i), false);//先頭にプラスを配置
+                    plus.transform.SetParent(verticalLayoutGroup.transform.GetChild(i), false);//先頭にプラスボタンを配置
 
                 }
             }
