@@ -111,12 +111,25 @@ partial class GameCommandSystem : MonoBehaviour
         
     }
 
+    private void AddLine(ref Queue<GameCommand> Queue, string command_json, int index)
+    {
+        GameCommand _command = JsonGameCommandParse.JsonToGameCommand(command_json);
+        Queue.Append(_command);
+    }
     public void ExecuteCommands(List<GameCommand> commands)
     {
-        foreach (GameCommand command in commands)
+        Queue<GameCommand> queue = new Queue<GameCommand>();
+        foreach (GameCommand item in commands)
         {
-            ExecuteCommand(command);
+            queue.Enqueue(item);
         }
+        for (int i = 0;queue.Count > 0; i++)
+        {
+            GameCommand _command = queue.Dequeue();
+            ExecuteCommand(_command);
+
+        }
+
     }
     //コマンド登録関数
     public void SubscribeCommand(string command,ExecutableFunction function)
@@ -284,6 +297,39 @@ partial class GameCommandSystem : MonoBehaviour
 
         return output;
     }
+
+    string Branch(Dictionary<string, string> args)
+    {
+        bool condition = ReadAs<bool>(args["condition"]);
+        float Process = 0;
+        if (condition)
+        {
+            Process = ReadAs<Float>(args["OnTrue"]).value;
+        }
+        else
+        {
+            Process = ReadAs<Float>(args["OnFalse"]).value;
+        }
+
+
+        return "";
+    }
+
+    string While(Dictionary<string, string> args)
+    {
+        bool condition = ReadAs<bool>(args["condition"]);
+        float Process = 0;
+        if (condition)
+        {
+            Process = ReadAs<Float>(args["OnTrue"]).value;
+        }
+        else
+        {
+        }
+
+
+        return "";
+    }
     //コマンド：
     //デバッグログする
     //入力：value=値
@@ -305,7 +351,7 @@ partial class GameCommandSystem : MonoBehaviour
 
     //stringから各種値に変換
     //もしくは変数を読み込み
-    T ReadAs<T>(string value) where T : class
+    T ReadAs<T>(string value)
     {
         object outobj = default(T);
         //★変数の時---------------------------------
@@ -332,7 +378,7 @@ partial class GameCommandSystem : MonoBehaviour
         return (T)outobj;
     }
 
-    T ReadObjectAs<T>(object _object) where T : class
+    T ReadObjectAs<T>(object _object)
     {
         object object_value = _object;
         object output = object_value;
@@ -341,7 +387,7 @@ partial class GameCommandSystem : MonoBehaviour
         {
             output = GetAsFormatedString(object_value);//フォーマット処理でstringに変換
         }
-        return output as T;
+        return (T)output;
     }
 
     //可能だったらstringから値(現状Float固定)に変換、不可能だったらstringのデータそのまま
@@ -350,6 +396,7 @@ partial class GameCommandSystem : MonoBehaviour
         bool is_parsed = false;
         _output = null;
         float value = 0;
+        bool boolean = false;
         //★数値に変換可能な文字列なら---------------------------------
         if (float.TryParse(_string,out value))
         {
@@ -357,6 +404,13 @@ partial class GameCommandSystem : MonoBehaviour
             //Floatに変換
             _output = new Float(value);
             is_parsed = true;
+        }
+        //★ブーリアンに変換可能な文字列なら---------------------------------
+        if (bool.TryParse(_string,out boolean))
+        {
+            _output = boolean;
+            is_parsed = true;
+
         }
         //★変換不能だったら---------------------------------
         else
