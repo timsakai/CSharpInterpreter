@@ -1,8 +1,11 @@
 using System.Collections;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
+using static UnityEngine.Rendering.DebugUI;
+using System.Globalization;
 
 //変数
 //System.Objectで保管、コマンドが読むときに変換する。
@@ -29,6 +32,26 @@ public class DynamicVariable
     {
         variables.Add(name, variable);
     }
+}
+
+public class Float : IFormattable
+{
+    public float value;
+    public Float(float value)
+    {
+        this.value = value;
+    }
+
+    public string ToString(string format, IFormatProvider formatProvider)
+    {
+        return value.ToString(format,formatProvider);
+    }
+
+    public static implicit operator string(Float self)
+    {
+        return self.value.ToString();
+    }
+
 }
 partial class GameCommandSystem : MonoBehaviour
 {
@@ -176,10 +199,11 @@ partial class GameCommandSystem : MonoBehaviour
         string output = MakeVariableID();
         Variable output_variable = new Variable();
 
-        float A = ReadAs<float>(args["A"]);
-        float B = ReadAs<float>(args["B"]);
+        float A = ReadAs<Float>(args["A"]).value;
+        float B = ReadAs<Float>(args["B"]).value;
         string op = ReadAs<string>(args["operator"]);
 
+        
         float opereted = 0;
         bool is_vaild_oparator = true;
 
@@ -203,11 +227,12 @@ partial class GameCommandSystem : MonoBehaviour
                 break;
         }
 
-        output_variable.value = opereted;
+        Float outobj = new Float(opereted);
+        output_variable.value = outobj;
         if(!is_vaild_oparator) output_variable.value = "Error,operator is not valid";
         dynamicVariable.AddVariable(output, output_variable);
 
-        Debug.Log(opereted);
+        Debug.Log(output_variable.value);
 
         return output;
     }
@@ -224,8 +249,8 @@ partial class GameCommandSystem : MonoBehaviour
         string output = MakeVariableID();
         Variable output_variable = new Variable();
 
-        float A = ReadAs<float>(args["A"]);
-        float B = ReadAs<float>(args["B"]);
+        float A = ReadAs<Float>(args["A"]).value;
+        float B = ReadAs<Float>(args["B"]).value;
         string op = ReadAs<string>(args["operator"]);
 
         bool compared = false;
@@ -280,59 +305,86 @@ partial class GameCommandSystem : MonoBehaviour
 
     //stringから各種値に変換
     //もしくは変数を読み込み
-    T ReadAs<T>(string value)
+    T ReadAs<T>(string value) where T : class
     {
-        if(value.StartsWith("var_"))
+        object outobj = default(T);
+        //★変数の時---------------------------------
+        if (value.StartsWith("var_"))
         {
-            //変数読込
-            return (T)userVariable[value.Substring(4)].value;
+            outobj = ReadObjectAs<T>(userVariable[value.Substring(4)].value);　// Tで指定された型で読み込み
         }
+        //★コマンドの時---------------------------------
         else if (value.StartsWith("cmd_"))
         {
-            //コマンド呼び出し
-            string command_string = value.Substring(4);
-            GameCommand gameCommand = JsonGameCommandParse.JsonToGameCommand(command_string);
-            string d_var = ExecuteCommand(gameCommand);
-            return (T)(dynamicVariable.GetVariable(d_var).value);
+            string command_string = value.Substring(4);//"cmd_を排除"
+            GameCommand gameCommand = JsonGameCommandParse.JsonToGameCommand(command_string);//コマンドにパース（エスケープ付き）
+            string d_var = ExecuteCommand(gameCommand);//コマンド呼び出し
+
+            outobj = ReadObjectAs<T>( dynamicVariable.GetVariable(d_var).value);//返り値を保存している変数を指定した型で読み込み
         }
+        //★入力値の時---------------------------------
         else
         {
-            object object_value = (object)value;
-            object output = null;
-            if(typeof(T) == typeof(string))
-            {
-                output = object_value; // stringの時は変換無し
-            }
-            if(typeof(T) == typeof(float))
-            {
-                // floatの変換処理
-                // stringとして変換後にパース
-                string str = (string)object_value;
-                float val = float.Parse(str);
-                output = val;
-            }
-            if (typeof(T) == typeof(bool))
-            {
-                // boolの変換処理
-                // stringとして変換後にパース
-                string str = (string)object_value;
-                bool val = bool.Parse(str);
-                output = val;
-            }
-            //objectにしてからTにする、やべぇ
-            //変換処理かますわけじゃないから、数値変換なんかもできるわけがない！
-            //valueを数値変換→objectにしてからTにするってコト!?
-            return (T)output;
+            object parsed_value = null;
+            ParseToFloatOrNotParsedString(value, out parsed_value); // 確定でstringなので、stringから値のパース
+            outobj = ReadObjectAs<T>(parsed_value);//値からTの型で読み込み
         }
-        return default(T);
+        return (T)outobj;
+    }
+
+    T ReadObjectAs<T>(object _object) where T : class
+    {
+        object object_value = _object;
+        object output = object_value;
+        //★変換先がstringだったとき---------------------------------
+        if (typeof(T) == typeof(string))
+        {
+            output = GetAsFormatedString(object_value);//フォーマット処理でstringに変換
+        }
+        return output as T;
+    }
+
+    //可能だったらstringから値(現状Float固定)に変換、不可能だったらstringのデータそのまま
+    public bool ParseToFloatOrNotParsedString(string _string,out object _output)
+    {
+        bool is_parsed = false;
+        _output = null;
+        float value = 0;
+        //★数値に変換可能な文字列なら---------------------------------
+        if (float.TryParse(_string,out value))
+        {
+            
+            //Floatに変換
+            _output = new Float(value);
+            is_parsed = true;
+        }
+        //★変換不能だったら---------------------------------
+        else
+        {
+            //引数のデータそのまま
+            _output = _string;
+        }
+        //Objectで返す
+        return is_parsed;
+    }
+    public string GetAsFormatedString(object value)
+    {
+        //★string →　stringの変換だったら---------------------------------
+        if (value is string)
+        {
+            return (string)value;//そのまま返す
+        }
+        //★数値から変換可能な文字列なら---------------------------------
+        var formattable = (IFormattable)value;
+        return formattable.ToString(null, CultureInfo.InvariantCulture);//IFormattable.ToString()を使う
     }
 
     //動的変数用のランダム文字列を出すだけの関数
     public string MakeVariableID()
     {
-        int number = Random.Range(0, 999999); // 0から9999までのランダムな数字
+        int number = UnityEngine.Random.Range(0, 999999); // 0から9999までのランダムな数字
         string formattedNumber = number.ToString("D6");
-        int wordIdx = Random.Range(0, words.Length - 1);
+        int wordIdx = UnityEngine.Random.Range(0, words.Length - 1);
         return words[wordIdx] + formattedNumber;
     }
 
